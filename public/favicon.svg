@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Docs Hub">
+  <rect width="32" height="32" rx="7" fill="#252526"/>
+  <!-- stacked pages -->
+  <rect x="6" y="7" width="15" height="19" rx="2" fill="#094771"/>
+  <rect x="8" y="5" width="15" height="19" rx="2" fill="#1177bb" opacity="0.55"/>
+  <!-- front document -->
+  <path fill="#519aba" d="M10 8h9.5l4.5 4.5V25a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/>
+  <path fill="#252526" d="M19.5 8v4.5H24"/>
+  <!-- markdown lines -->
+  <rect x="12" y="16" width="9" height="1.4" rx="0.7" fill="#252526" opacity="0.45"/>
+  <rect x="12" y="19" width="7" height="1.4" rx="0.7" fill="#252526" opacity="0.45"/>
+  <rect x="12" y="22" width="10" height="1.4" rx="0.7" fill="#252526" opacity="0.45"/>
+  <!-- hub node -->
+  <circle cx="25" cy="9" r="4.25" fill="#1177bb"/>
+  <circle cx="25" cy="9" r="1.75" fill="#e8e8e8"/>
+</svg>
