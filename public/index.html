@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs Hub</title>
+  <style>
+    /* Critical CSS — visible before stylesheet loads */
+    html, body { margin: 0; height: 100%; background: #1e1e1e; color: #cccccc; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #app { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #252526; flex-shrink: 0; }
+    .main { flex: 1; min-width: 0; }
+    .hidden { display: none !important; }
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- Fixed left sidebar (VS Code Explorer) -->
+    <aside id="sidebar" class="sidebar" aria-label="Explorer">
+      <div class="sidebar-top">
+        <div class="sidebar-titlebar">
+          <span class="sidebar-title">EXPLORER</span>
+          <div class="sidebar-actions">
+            <button id="btn-refresh" class="action-btn" title="Refresh" aria-label="Refresh">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M13.65 2.35A8 8 0 1 0 14 9h-2a6 6 0 1 1-1.76-4.24l-2.12 2.12H14V2l-2.35 2.35z"/></svg>
+            </button>
+            <button id="sidebar-close" class="action-btn mobile-only" title="Close sidebar" aria-label="Close sidebar">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <label for="project-select" class="visually-hidden">Project</label>
+          <select id="project-select" class="select"></select>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="filter-input-wrap">
+            <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/></svg>
+            <input id="tree-filter" type="search" placeholder="Filter files…" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+      </div>
+
+      <nav id="file-tree" class="file-tree" aria-label="File tree"></nav>
+
+      <div class="sidebar-bottom">
+        <details class="sidebar-panel" open>
+          <summary class="panel-header">
+            <span>RECENT</span>
+          </summary>
+          <ul id="recent-list" class="mini-list"></ul>
+        </details>
+        <details class="sidebar-panel">
+          <summary class="panel-header">
+            <span>FAVORITES</span>
+          </summary>
+          <ul id="favorites-list" class="mini-list"></ul>
+        </details>
+      </div>
+    </aside>
+
+    <div id="sidebar-resizer" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="toolbar">
+        <div class="toolbar-left">
+          <button id="sidebar-toggle" class="toolbar-icon" title="Toggle sidebar (Ctrl+B)" aria-label="Toggle sidebar">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75zm0 5a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75zM1.75 12h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5z"/></svg>
+          </button>
+          <nav id="breadcrumb" class="breadcrumb" aria-label="Breadcrumb"></nav>
+        </div>
+
+        <div class="toolbar-center">
+          <button id="search-trigger" class="search-trigger" type="button" aria-label="Search documentation">
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/></svg>
+            <span class="search-trigger-label">Search documentation…</span>
+            <kbd class="search-kbd">Ctrl K</kbd>
+          </button>
+        </div>
+
+        <div class="toolbar-right">
+          <button id="btn-favorite" class="toolbar-icon" title="Toggle favorite" aria-label="Toggle favorite" disabled>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327 1.67A.75.75 0 0 1 8 .25z"/></svg>
+          </button>
+          <div class="toolbar-divider"></div>
+          <button id="btn-open-folder" class="toolbar-text-btn" title="Open project folder">Open Folder</button>
+          <button id="btn-copy-md" class="toolbar-text-btn" title="Copy Markdown" disabled>Copy MD</button>
+          <button id="btn-cursor" class="toolbar-text-btn" title="Open in Cursor" disabled>Cursor</button>
+          <button id="btn-reveal" class="toolbar-text-btn" title="Open containing folder" disabled>Reveal</button>
+          <div class="toolbar-divider"></div>
+          <button id="btn-theme" class="toolbar-icon" title="Toggle theme" aria-label="Toggle theme">
+            <svg class="icon-sun" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0zm0 13a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13zM2.47 2.47a.75.75 0 0 1 1.06 0l1.06 1.06a.75.75 0 0 1-1.06 1.06L2.47 3.53a.75.75 0 0 1 0-1.06zm9.94 9.94a.75.75 0 0 1 1.06 0l1.06 1.06a.75.75 0 0 1-1.06 1.06l-1.06-1.06a.75.75 0 0 1 0-1.06zM.75 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5H1.5A.75.75 0 0 1 .75 8zm13 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 13.75 8zM2.47 13.53a.75.75 0 0 1 0-1.06l1.06-1.06a.75.75 0 0 1 1.06 1.06l-1.06 1.06a.75.75 0 0 1-1.06 0zm9.94-9.94a.75.75 0 0 1 0-1.06l1.06-1.06a.75.75 0 0 1 1.06 1.06l-1.06 1.06a.75.75 0 0 1-1.06 0z"/></svg>
+            <svg class="icon-moon hidden" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="file-meta" class="file-meta hidden">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M13.71 4.29 9.71.29C9.53.11 9.28 0 9 0H2.5A1.5 1.5 0 0 0 1 1.5v13A1.5 1.5 0 0 0 2.5 16h11a1.5 1.5 0 0 0 1.5-1.5V5c0-.28-.11-.53-.29-.71zM9 1.71 12.29 5H9V1.71z"/></svg>
+        <span id="meta-name"></span>
+        <span class="meta-dot"></span>
+        <span id="meta-size"></span>
+        <span class="meta-dot"></span>
+        <span id="meta-modified"></span>
+      </div>
+
+      <div class="content-area">
+        <article id="viewer" class="viewer">
+          <div id="welcome" class="welcome">
+            <div class="welcome-icon">
+              <svg viewBox="0 0 16 16" width="48" height="48" aria-hidden="true"><path fill="currentColor" d="M4 1.75C4 .784 4.784 0 5.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 14 16H5.75A1.75 1.75 0 0 1 4 14.25V1.75zM5.75 1.5a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5H5.75z"/></svg>
+            </div>
+            <h2>Documentation Hub</h2>
+            <p>Browse markdown files from the explorer, or press <kbd>Ctrl K</kbd> to search.</p>
+          </div>
+          <div class="markdown-container hidden" id="markdown-container">
+            <div id="markdown-content" class="markdown-body"></div>
+          </div>
+        </article>
+
+        <div id="toc-resizer" class="panel-resizer" role="separator" aria-orientation="vertical" aria-label="Resize table of contents"></div>
+
+        <aside id="toc-panel" class="toc-panel" aria-label="Table of contents">
+          <div class="toc-titlebar">
+            <span class="toc-title">OUTLINE</span>
+            <button id="toc-close" class="action-btn mobile-only" aria-label="Close outline">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/></svg>
+            </button>
+          </div>
+          <nav id="toc" class="toc"></nav>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating search -->
+  <div id="search-modal" class="search-overlay hidden" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="search-backdrop"></div>
+    <div class="search-palette">
+      <div class="search-palette-input">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/></svg>
+        <input id="modal-search-input" type="search" placeholder="Search all markdown files…" autocomplete="off" spellcheck="false" />
+        <kbd class="search-kbd">Esc</kbd>
+      </div>
+      <ul id="search-results" class="search-results"></ul>
+    </div>
+  </div>
+
+  <div id="loading" class="loading hidden" aria-live="polite" aria-busy="true">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

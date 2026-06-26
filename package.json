@@ -1,0 +1,20 @@
+{
+  "name": "docs-viewer",
+  "version": "1.0.0",
+  "description": "Modern Documentation Hub — scan and browse markdown across projects",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["documentation", "markdown", "docs-hub"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "express": "^5.2.1",
+    "glob": "^13.0.6",
+    "open": "^11.0.0"
+  }
+}
