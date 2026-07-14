@@ -20,6 +20,7 @@ import {
   setFilter,
 } from './js/tree.js';
 import { initResizer, applyPanelWidth } from './js/resizer.js';
+import { downloadMarkdownPdf } from './js/pdf.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -54,6 +55,8 @@ const els = {
   btnCopyMd: $('#btn-copy-md'),
   btnCursor: $('#btn-cursor'),
   btnReveal: $('#btn-reveal'),
+  btnDownloadPdf: $('#btn-download-pdf'),
+  btnOutline: $('#btn-outline'),
   btnRefresh: $('#btn-refresh'),
   btnTheme: $('#btn-theme'),
   sidebarToggle: $('#sidebar-toggle'),
@@ -92,6 +95,17 @@ function applyTheme(theme) {
 function toggleSidebar() {
   const collapsed = document.body.classList.toggle('sidebar-collapsed');
   storage.setSidebarCollapsed(collapsed);
+}
+
+function toggleOutline(force) {
+  const collapsed =
+    typeof force === 'boolean'
+      ? force
+      : !document.body.classList.contains('outline-collapsed');
+
+  document.body.classList.toggle('outline-collapsed', collapsed);
+  els.btnOutline?.classList.toggle('active', !collapsed);
+  storage.setOutlineCollapsed(collapsed);
 }
 
 function renderBreadcrumb(project, filePath) {
@@ -171,6 +185,7 @@ function updateToolbarState() {
   els.btnCopyMd.disabled = !hasFile;
   els.btnCursor.disabled = !hasFile;
   els.btnReveal.disabled = !hasFile;
+  els.btnDownloadPdf.disabled = !hasFile;
 
   if (hasFile) {
     const fav = storage.isFavorite(state.currentProject, state.currentFile.path);
@@ -447,11 +462,27 @@ function bindEvents() {
 
   els.sidebarToggle.addEventListener('click', toggleSidebar);
   els.sidebarClose.addEventListener('click', toggleSidebar);
-  els.tocClose.addEventListener('click', () => {
-    els.tocPanel.classList.add('hidden-mobile');
+  els.tocClose.addEventListener('click', () => toggleOutline(true));
+  els.btnOutline.addEventListener('click', () => toggleOutline());
+
+  els.btnDownloadPdf.addEventListener('click', async () => {
+    if (!state.currentFile) return;
+    showLoading(true);
+    try {
+      await downloadMarkdownPdf(els.markdownContent, state.currentFile.name);
+      showToast('PDF downloaded');
+    } catch (err) {
+      showToast(err.message || 'PDF export failed');
+    } finally {
+      showLoading(false);
+    }
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      toggleOutline();
+    }
     if (e.ctrlKey && e.key === 'k') {
       e.preventDefault();
       openSearchModal();
@@ -472,6 +503,8 @@ async function init() {
   if (storage.getSidebarCollapsed()) {
     document.body.classList.add('sidebar-collapsed');
   }
+
+  toggleOutline(storage.getOutlineCollapsed());
 
   bindEvents();
   initPanelResizers();

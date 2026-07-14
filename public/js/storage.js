@@ -10,6 +10,7 @@ const keys = {
   project: `${PREFIX}project`,
   sidebarWidth: `${PREFIX}sidebar-width`,
   tocWidth: `${PREFIX}toc-width`,
+  outlineCollapsed: `${PREFIX}outline-collapsed`,
 };
 
 function read(key, fallback) {
@@ -118,4 +119,12 @@ export function getTocWidth() {
 
 export function setTocWidth(width) {
   write(keys.tocWidth, width);
+}
+
+export function getOutlineCollapsed() {
+  return read(keys.outlineCollapsed, false);
+}
+
+export function setOutlineCollapsed(collapsed) {
+  write(keys.outlineCollapsed, collapsed);
 }
