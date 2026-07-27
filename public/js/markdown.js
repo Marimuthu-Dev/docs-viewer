@@ -64,10 +64,11 @@ function configureMarked(onInternalLink) {
 
   const renderer = new markedLib.Renderer();
 
-  renderer.heading = ({ text, depth }) => {
-    const plain = text.replace(/<[^>]+>/g, '');
+  renderer.heading = function ({ tokens, depth }) {
+    const html = this.parser.parseInline(tokens);
+    const plain = html.replace(/<[^>]+>/g, '');
     const id = slugify(plain);
-    return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+    return `<h${depth} id="${id}">${html}</h${depth}>\n`;
   };
 
   renderer.code = ({ text, lang }) => {
@@ -93,7 +94,8 @@ function configureMarked(onInternalLink) {
     return `<img src="${src}" alt="${escapeHtml(text)}"${titleAttr} loading="lazy" />`;
   };
 
-  renderer.link = ({ href, title, text }) => {
+  renderer.link = function ({ href, title, tokens }) {
+    const text = this.parser.parseInline(tokens);
     const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
     if (!href) return `<a${titleAttr}>${text}</a>`;
 
@@ -114,11 +116,18 @@ function configureMarked(onInternalLink) {
     return `<a href="${src}"${titleAttr} target="_blank" rel="noopener">${text}</a>`;
   };
 
-  renderer.table = ({ header, rows }) => {
-    const head = header.map((cell) => `<th>${cell.text}</th>`).join('');
+  renderer.table = function ({ header, rows }) {
+    const renderCell = (cell, tag) => {
+      const content = this.parser.parseInline(cell.tokens);
+      const align = cell.align ? ` align="${cell.align}"` : '';
+      return `<${tag}${align}>${content}</${tag}>`;
+    };
+
+    const head = header.map((cell) => renderCell.call(this, cell, 'th')).join('');
     const body = rows
-      .map((row) => `<tr>${row.map((cell) => `<td>${cell.text}</td>`).join('')}</tr>`)
+      .map((row) => `<tr>${row.map((cell) => renderCell.call(this, cell, 'td')).join('')}</tr>`)
       .join('');
+
     return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   };
 
