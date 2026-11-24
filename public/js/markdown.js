@@ -169,11 +169,12 @@ export function extractToc(content) {
   return headings;
 }
 
-// Mermaid runs flowchart labels through a markdown parser, so a label such as
-// "1. Parse errors" or "- item" becomes a list and renders as
-// "Unsupported markdown: list". Escape list markers at the start of a label
-// ("1\. Parse") so marked treats them as literal text.
-function escapeMermaidLabelLists(source) {
+// Mermaid runs flowchart labels through a markdown parser that only supports
+// inline formatting, so a label starting with a block marker ("1. Parse",
+// "- item", "## Error", "> note") renders as "Unsupported markdown: list" /
+// "heading" / "blockquote". Backslash-escape the marker at the start of a label
+// ("1\. Parse", "\## Error") so marked treats it as literal text.
+function escapeMermaidLabelMarkdown(source) {
   const firstLine = source
     .split('\n')
     .map((l) => l.trim())
@@ -182,7 +183,9 @@ function escapeMermaidLabelLists(source) {
 
   return source
     .replace(/([[({|>"]\s*)(\d{1,9})([.)])(?=\s)/g, '$1$2\\$3')
-    .replace(/([[({|"]\s*)([-*+])(?=\s)/g, '$1\\$2');
+    .replace(/([[({|"]\s*)([-*+])(?=\s)/g, '$1\\$2')
+    .replace(/([[({|"]\s*)(#{1,6})(?=\s)/g, '$1\\$2')
+    .replace(/("\s*)(>)(?=\s)/g, '$1\\$2');
 }
 
 export async function renderMermaid(container) {
@@ -202,7 +205,7 @@ export async function renderMermaid(container) {
     try {
       const { svg } = await mermaidLib.render(
         `mermaid-${Math.random().toString(36).slice(2)}`,
-        escapeMermaidLabelLists(block.textContent)
+        escapeMermaidLabelMarkdown(block.textContent)
       );
       const wrapper = document.createElement('div');
       wrapper.className = 'mermaid-diagram';
