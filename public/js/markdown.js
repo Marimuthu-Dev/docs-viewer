@@ -169,6 +169,22 @@ export function extractToc(content) {
   return headings;
 }
 
+// Mermaid runs flowchart labels through a markdown parser, so a label such as
+// "1. Parse errors" or "- item" becomes a list and renders as
+// "Unsupported markdown: list". Escape list markers at the start of a label
+// ("1\. Parse") so marked treats them as literal text.
+function escapeMermaidLabelLists(source) {
+  const firstLine = source
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l && !l.startsWith('%%'));
+  if (!firstLine || !/^(flowchart|graph)\b/i.test(firstLine)) return source;
+
+  return source
+    .replace(/([[({|>"]\s*)(\d{1,9})([.)])(?=\s)/g, '$1$2\\$3')
+    .replace(/([[({|"]\s*)([-*+])(?=\s)/g, '$1\\$2');
+}
+
 export async function renderMermaid(container) {
   const blocks = container.querySelectorAll('pre.mermaid');
   if (blocks.length === 0) return;
@@ -186,7 +202,7 @@ export async function renderMermaid(container) {
     try {
       const { svg } = await mermaidLib.render(
         `mermaid-${Math.random().toString(36).slice(2)}`,
-        block.textContent
+        escapeMermaidLabelLists(block.textContent)
       );
       const wrapper = document.createElement('div');
       wrapper.className = 'mermaid-diagram';
